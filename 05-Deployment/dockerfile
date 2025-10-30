@@ -1,0 +1,24 @@
+#creating docker image based on the image prebuilt zoomcamp model image
+FROM agrigorev/zoomcamp-model:2025
+
+# Copying the uv package manager from its official image for faster installs
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Setting the working directory inside the container
+WORKDIR /code
+
+# Copying dependency files for installation
+COPY pyproject.toml uv.lock ./
+
+# Installing dependencies listed in the lock file (without dev packages)
+RUN uv sync --frozen --no-dev
+
+# Copying the FastAPI application file(containig pipeline_v2) into the container
+COPY predict2.py ./
+
+# Exposing the port the FastAPI app will run on
+EXPOSE 9696
+
+# Running the FastAPI app using uv and uvicorn
+CMD ["uv", "run", "uvicorn", "predict2:app", "--host", "0.0.0.0", "--port", "9696"]
+
